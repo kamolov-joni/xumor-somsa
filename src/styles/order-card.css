@@ -1,0 +1,226 @@
+.order-card {
+  padding: 24px;
+  cursor: pointer;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  overflow: hidden;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  border: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.order-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+  border-color: rgba(0, 0, 0, 0.15);
+}
+
+/* Header styles */
+.order-card-header {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+  padding-bottom: 12px;
+}
+
+.order-card-title-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.order-card-badges {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.order-card-title {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--text-bright);
+  line-height: 1.3;
+}
+
+.status-badge {
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  background: rgba(var(--status-color), 0.1);
+  color: var(--status-color);
+  border: 1px solid rgba(var(--status-color), 0.2);
+  white-space: nowrap;
+}
+
+.payment-badge {
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  background: rgba(0, 0, 0, 0.08);
+  border: 1px solid rgba(0, 0, 0, 0.15);
+  white-space: nowrap;
+  color: var(--text-primary);
+}
+
+.source-badge {
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  background: rgba(252, 213, 0, 0.15);
+  border: 1px solid rgba(252, 213, 0, 0.3);
+  white-space: nowrap;
+  color: #C9A400;
+}
+
+/* Countdown */
+.countdown-timer {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  padding: 10px 14px;
+  border-radius: 10px;
+  background: rgba(0, 0, 0, 0.02);
+}
+
+.countdown-digits {
+  font-family: monospace;
+  font-size: 1.4rem;
+  font-weight: 700;
+  letter-spacing: 1px;
+}
+
+.countdown-label {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+}
+
+.countdown-normal {
+  color: var(--accent);
+  border-left: 3px solid var(--accent);
+}
+
+.countdown-warning {
+  color: var(--status-pending);
+  border-left: 3px solid var(--status-pending);
+}
+
+.countdown-critical {
+  color: #f97316;
+  border-left: 3px solid #f97316;
+  animation: pulse 1s infinite;
+}
+
+.countdown-overdue {
+  color: var(--status-cancelled);
+  border-left: 3px solid var(--status-cancelled);
+  animation: pulse 0.7s infinite;
+}
+
+.countdown-done {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+/* Body */
+.order-info-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.order-info-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 0.9rem;
+  color: var(--text-muted);
+}
+
+.info-icon {
+  flex-shrink: 0;
+  color: var(--accent);
+  opacity: 0.8;
+}
+
+.order-info-products {
+  background: rgba(0, 0, 0, 0.02);
+  padding: 8px 12px;
+  border-radius: 8px;
+  border: 1px solid rgba(0, 0, 0, 0.04);
+  color: var(--text-primary);
+}
+
+.order-info-products svg {
+  color: var(--secondary);
+}
+
+/* Actions */
+.order-card-actions {
+  margin-top: auto;
+  display: flex;
+  gap: 10px;
+  border-top: 1px solid rgba(0, 0, 0, 0.05);
+  padding-top: 16px;
+}
+
+.action-btn {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 8px 12px;
+  border-radius: 8px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  background: rgba(0, 0, 0, 0.03);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  color: var(--text-primary);
+  transition: var(--transition-smooth);
+}
+
+.action-btn:hover {
+  background: rgba(0, 0, 0, 0.08);
+}
+
+.action-btn-progress:hover {
+  background: rgba(59, 130, 246, 0.15);
+  border-color: var(--status-inprogress);
+  color: var(--status-inprogress);
+}
+
+.action-btn-deliver:hover {
+  background: rgba(16, 185, 129, 0.15);
+  border-color: var(--status-delivered);
+  color: var(--status-delivered);
+}
+
+.action-btn-cancel:hover {
+  background: rgba(239, 68, 68, 0.15);
+  border-color: var(--status-cancelled);
+  color: var(--status-cancelled);
+}
+
+/* Critical/Overdue card indicators */
+.order-card-critical {
+  border-color: rgba(249, 115, 22, 0.3);
+  animation: pulseOrange 3s infinite;
+}
+
+.order-card-overdue {
+  border-color: rgba(239, 68, 68, 0.3);
+  animation: pulseRed 2s infinite;
+}

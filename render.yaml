@@ -1,0 +1,19 @@
+services:
+  - type: web
+    name: somsa-order-backend
+    runtime: node
+    plan: starter # 'free' ham bo'ladi, lekin uyqu + disksiz (pastdagi izohga qarang)
+    buildCommand: npm install
+    startCommand: npm start
+    envVars:
+      - key: TELEGRAM_BOT_TOKEN
+        sync: false # Render dashboard'da qo'lda kiritiladi
+      - key: DB_PATH
+        value: /data/orders.db
+      - key: BACKUP_DIR
+        value: /data/backups
+      # RENDER_EXTERNAL_URL ni Render avtomatik beradi — bot webhookni shundan oladi.
+    disk:
+      name: somsa-data
+      mountPath: /data
+      sizeGB: 1

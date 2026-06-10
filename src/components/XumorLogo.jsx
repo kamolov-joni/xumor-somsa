@@ -1,0 +1,33 @@
+// Xumor Somsa brand mark — 4 yellow petals with a red center
+const XumorLogo = ({ size = 40 }) => (
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 100 100"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+    aria-label="Xumor Somsa"
+  >
+    {/* Petals: teardrop shapes pointing to each corner */}
+    <path
+      d="M50 50 C 30 42, 18 30, 22 18 C 34 14, 46 26, 50 46 Z"
+      fill="#FCD500"
+    />
+    <path
+      d="M50 50 C 70 42, 82 30, 78 18 C 66 14, 54 26, 50 46 Z"
+      fill="#FCD500"
+    />
+    <path
+      d="M50 50 C 30 58, 18 70, 22 82 C 34 86, 46 74, 50 54 Z"
+      fill="#FCD500"
+    />
+    <path
+      d="M50 50 C 70 58, 82 70, 78 82 C 66 86, 54 74, 50 54 Z"
+      fill="#FCD500"
+    />
+    {/* Red center */}
+    <circle cx="50" cy="50" r="11" fill="#DC2814" />
+  </svg>
+);
+
+export default XumorLogo;

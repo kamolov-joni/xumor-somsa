@@ -1,0 +1,627 @@
+/* ============================================
+   LEAPCO PREMIUM CAR CARE - STYLING
+   ============================================ */
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+:root {
+    --primary-dark: #0a0e27;
+    --primary-black: #000000;
+    --accent-silver: #c0c0c0;
+    --accent-light-gray: #e8e8e8;
+    --text-light: #ffffff;
+    --text-muted: #b0b0b0;
+    --border-color: #2a2a2a;
+    --hover-silver: #a9a9a9;
+}
+
+html {
+    scroll-behavior: smooth;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: var(--primary-dark);
+    color: var(--text-light);
+    line-height: 1.6;
+}
+
+/* ============================================
+   TYPOGRAPHY
+   ============================================ */
+
+h1, h2, h3 {
+    font-weight: 600;
+}
+
+h1 {
+    font-size: 3.5rem;
+    line-height: 1.2;
+    margin-bottom: 1rem;
+    letter-spacing: -0.02em;
+}
+
+h2 {
+    font-size: 2.5rem;
+    margin-bottom: 1.5rem;
+}
+
+h3 {
+    font-size: 1.5rem;
+    margin-bottom: 0.5rem;
+}
+
+p {
+    font-size: 1.1rem;
+    color: var(--text-muted);
+}
+
+/* ============================================
+   HERO SECTION
+   ============================================ */
+
+.hero {
+    background: linear-gradient(135deg, var(--primary-dark) 0%, #1a1f3a 100%);
+    padding: 60px 20px;
+    min-height: 70vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.hero-container {
+    max-width: 900px;
+    width: 100%;
+}
+
+.logo {
+    font-size: 1.8rem;
+    font-weight: 700;
+    letter-spacing: 0.15em;
+    margin-bottom: 2rem;
+    color: var(--accent-silver);
+}
+
+.hero-title {
+    color: var(--text-light);
+    margin-bottom: 1.5rem;
+}
+
+.hero-subtitle {
+    font-size: 1.3rem;
+    color: var(--text-muted);
+    margin-bottom: 3rem;
+}
+
+.hero-image-wrapper {
+    width: 100%;
+    max-width: 400px;
+    margin: 3rem auto;
+    border-radius: 8px;
+    overflow: hidden;
+    border: 1px solid var(--border-color);
+}
+
+.hero-image {
+    width: 100%;
+    height: auto;
+    display: block;
+}
+
+/* ============================================
+   BUNDLES SECTION (CRITICAL)
+   ============================================ */
+
+.bundles-section {
+    background: var(--primary-black);
+    padding: 80px 20px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.bundles-container {
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.bundles-title {
+    text-align: center;
+    font-size: 2.5rem;
+    margin-bottom: 3rem;
+    color: var(--text-light);
+}
+
+.bundle-options {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 2rem;
+    margin-bottom: 2rem;
+}
+
+.bundle-card {
+    background: #1a1a1a;
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 2rem;
+    position: relative;
+    transition: all 0.3s ease;
+    display: flex;
+    flex-direction: column;
+}
+
+.bundle-card:hover {
+    border-color: var(--accent-silver);
+    transform: translateY(-5px);
+    box-shadow: 0 10px 40px rgba(192, 192, 192, 0.1);
+}
+
+.bundle-card-popular {
+    border: 2px solid var(--accent-silver);
+    background: linear-gradient(135deg, #1a1a1a 0%, #252525 100%);
+    transform: scale(1.05);
+}
+
+.bundle-card-popular:hover {
+    transform: scale(1.05) translateY(-5px);
+}
+
+.bundle-badge {
+    position: absolute;
+    top: -12px;
+    left: 20px;
+    background: var(--accent-silver);
+    color: var(--primary-black);
+    padding: 0.5rem 1rem;
+    border-radius: 20px;
+    font-size: 0.9rem;
+    font-weight: 600;
+}
+
+.bundle-header {
+    margin-bottom: 1.5rem;
+}
+
+.bundle-name {
+    font-size: 1.5rem;
+    color: var(--text-light);
+    margin-bottom: 0.5rem;
+}
+
+.bundle-discount {
+    display: inline-block;
+    background: rgba(192, 192, 192, 0.1);
+    color: var(--accent-silver);
+    padding: 0.4rem 0.8rem;
+    border-radius: 6px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    margin-left: 0.5rem;
+}
+
+.bundle-price {
+    margin-bottom: 1.5rem;
+    border-bottom: 1px solid var(--border-color);
+    padding-bottom: 1.5rem;
+}
+
+.price-amount {
+    display: block;
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: var(--accent-silver);
+    margin-bottom: 0.5rem;
+}
+
+.price-unit {
+    font-size: 0.95rem;
+    color: var(--text-muted);
+}
+
+.bundle-features {
+    list-style: none;
+    margin-bottom: 2rem;
+    flex-grow: 1;
+}
+
+.bundle-features li {
+    padding: 0.7rem 0;
+    color: var(--text-muted);
+    font-size: 0.95rem;
+}
+
+.bundle-features li:before {
+    content: "✓ ";
+    color: var(--accent-silver);
+    font-weight: 700;
+    margin-right: 0.5rem;
+}
+
+/* ============================================
+   BUTTONS
+   ============================================ */
+
+.btn {
+    padding: 0.95rem 2rem;
+    border: none;
+    border-radius: 6px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.btn-primary {
+    background: var(--accent-silver);
+    color: var(--primary-black);
+}
+
+.btn-primary:hover {
+    background: var(--hover-silver);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(192, 192, 192, 0.2);
+}
+
+.btn-primary:active {
+    transform: translateY(0);
+}
+
+.bundle-btn {
+    width: 100%;
+    padding: 1.2rem 2rem;
+    font-size: 1.05rem;
+}
+
+.bundle-btn-primary {
+    background: var(--accent-silver);
+    color: var(--primary-black);
+}
+
+.btn-secondary {
+    border: 1px solid var(--border-color);
+    background: transparent;
+    color: var(--text-light);
+}
+
+.btn-secondary:hover {
+    border-color: var(--accent-silver);
+    color: var(--accent-silver);
+}
+
+.btn-large {
+    padding: 1.3rem 3rem;
+    font-size: 1.15rem;
+}
+
+/* ============================================
+   BENEFITS SECTION
+   ============================================ */
+
+.benefits-section {
+    background: linear-gradient(135deg, var(--primary-dark) 0%, #0f1533 100%);
+    padding: 80px 20px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.benefits-container {
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.section-title {
+    text-align: center;
+    font-size: 2.5rem;
+    margin-bottom: 3rem;
+    color: var(--text-light);
+}
+
+.benefits-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 2rem;
+}
+
+.benefit-card {
+    text-align: center;
+    padding: 2rem;
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.02);
+    transition: all 0.3s ease;
+}
+
+.benefit-card:hover {
+    border-color: var(--accent-silver);
+    background: rgba(192, 192, 192, 0.05);
+    transform: translateY(-5px);
+}
+
+.benefit-icon {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+    display: block;
+}
+
+.benefit-card h3 {
+    color: var(--accent-silver);
+    margin-bottom: 1rem;
+}
+
+.benefit-card p {
+    color: var(--text-muted);
+    font-size: 0.95rem;
+}
+
+/* ============================================
+   LIFESTYLE SECTION
+   ============================================ */
+
+.lifestyle-section {
+    background: var(--primary-black);
+    padding: 80px 20px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.lifestyle-container {
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.lifestyle-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 2rem;
+}
+
+.lifestyle-item {
+    border-radius: 12px;
+    overflow: hidden;
+    border: 1px solid var(--border-color);
+    transition: all 0.3s ease;
+}
+
+.lifestyle-item:hover {
+    border-color: var(--accent-silver);
+    transform: translateY(-5px);
+}
+
+.lifestyle-image {
+    width: 100%;
+    height: 250px;
+    object-fit: cover;
+    display: block;
+}
+
+.lifestyle-item h3 {
+    padding: 1.5rem 1.5rem 0.5rem;
+    color: var(--accent-silver);
+}
+
+.lifestyle-item p {
+    padding: 0 1.5rem 1.5rem;
+    font-size: 0.95rem;
+}
+
+/* ============================================
+   CTA SECTION
+   ============================================ */
+
+.cta-section {
+    background: linear-gradient(135deg, var(--primary-dark) 0%, #1a1f3a 100%);
+    padding: 60px 20px;
+    text-align: center;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.cta-container {
+    max-width: 700px;
+    margin: 0 auto;
+}
+
+.cta-section h2 {
+    margin-bottom: 1rem;
+}
+
+.cta-section p {
+    margin-bottom: 2rem;
+    font-size: 1.2rem;
+}
+
+/* ============================================
+   FOOTER
+   ============================================ */
+
+.footer {
+    background: var(--primary-black);
+    padding: 2rem 20px;
+    text-align: center;
+    border-top: 1px solid var(--border-color);
+}
+
+.footer-content {
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.footer-content p {
+    margin-bottom: 1rem;
+    font-size: 0.9rem;
+}
+
+.footer-links {
+    display: flex;
+    justify-content: center;
+    gap: 2rem;
+    flex-wrap: wrap;
+}
+
+.footer-links a {
+    color: var(--text-muted);
+    text-decoration: none;
+    transition: color 0.3s ease;
+    font-size: 0.9rem;
+}
+
+.footer-links a:hover {
+    color: var(--accent-silver);
+}
+
+/* ============================================
+   MODAL
+   ============================================ */
+
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.8);
+}
+
+.modal-content {
+    background-color: var(--primary-dark);
+    margin: 5% auto;
+    padding: 2rem;
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    width: 90%;
+    max-width: 500px;
+    text-align: center;
+}
+
+.close {
+    color: var(--text-muted);
+    float: right;
+    font-size: 2rem;
+    font-weight: bold;
+    cursor: pointer;
+    transition: color 0.3s ease;
+}
+
+.close:hover {
+    color: var(--accent-silver);
+}
+
+.modal-content h2 {
+    margin-top: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.modal-content button {
+    width: 100%;
+    margin-top: 1rem;
+}
+
+#cartDetails {
+    margin-bottom: 2rem;
+    text-align: left;
+    background: #1a1a1a;
+    padding: 1.5rem;
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
+}
+
+/* ============================================
+   RESPONSIVE DESIGN
+   ============================================ */
+
+@media (max-width: 768px) {
+    h1 {
+        font-size: 2.5rem;
+    }
+
+    h2 {
+        font-size: 1.8rem;
+    }
+
+    h3 {
+        font-size: 1.2rem;
+    }
+
+    .hero {
+        padding: 40px 15px;
+        min-height: 60vh;
+    }
+
+    .bundles-section {
+        padding: 60px 15px;
+    }
+
+    .bundle-options {
+        grid-template-columns: 1fr;
+    }
+
+    .bundle-card-popular {
+        transform: scale(1);
+    }
+
+    .bundle-card-popular:hover {
+        transform: translateY(-5px);
+    }
+
+    .benefits-section {
+        padding: 60px 15px;
+    }
+
+    .lifestyle-section {
+        padding: 60px 15px;
+    }
+
+    .cta-section {
+        padding: 40px 15px;
+    }
+
+    .bundle-btn {
+        padding: 1rem 1.5rem;
+    }
+}
+
+@media (max-width: 480px) {
+    h1 {
+        font-size: 2rem;
+    }
+
+    h2 {
+        font-size: 1.5rem;
+    }
+
+    .logo {
+        font-size: 1.4rem;
+    }
+
+    .price-amount {
+        font-size: 2rem;
+    }
+
+    .hero-subtitle {
+        font-size: 1.1rem;
+    }
+
+    .section-title {
+        font-size: 1.8rem;
+    }
+
+    .btn {
+        padding: 0.8rem 1.5rem;
+        font-size: 0.9rem;
+    }
+
+    .btn-large {
+        padding: 1rem 2rem;
+        font-size: 1rem;
+    }
+
+    .footer-links {
+        gap: 1rem;
+        flex-direction: column;
+    }
+}

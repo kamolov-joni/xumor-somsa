@@ -1,0 +1,40 @@
+{
+  "name": "leapco-landing",
+  "version": "1.0.0",
+  "description": "Premium Car Drying Towels - Shopify Landing Page for LEAPCO",
+  "private": true,
+  "scripts": {
+    "dev": "http-server . -p 3000 -c-1",
+    "serve": "http-server . -p 3000",
+    "test": "playwright test",
+    "test:chrome": "playwright test --project=chrome",
+    "test:mobile": "playwright test --project='Mobile Chrome'",
+    "test:debug": "playwright test --debug",
+    "test:ui": "playwright test --ui",
+    "test:headed": "playwright test --headed",
+    "test:report": "playwright show-report",
+    "test:trace": "playwright show-trace",
+    "build": "echo 'Landing page is static - no build needed'",
+    "lint": "echo 'No linting configured'",
+    "format": "echo 'No formatting configured'"
+  },
+  "keywords": [
+    "shopify",
+    "ecommerce",
+    "car-care",
+    "premium",
+    "microfiber",
+    "towel",
+    "landing-page"
+  ],
+  "author": "LEAPCO",
+  "license": "MIT",
+  "devDependencies": {
+    "@playwright/test": "^1.40.1",
+    "http-server": "^14.1.1"
+  },
+  "dependencies": {},
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
