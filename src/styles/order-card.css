@@ -224,3 +224,16 @@
   border-color: rgba(239, 68, 68, 0.3);
   animation: pulseRed 2s infinite;
 }
+
+/* Normal karta — qora border */
+.order-card.glass {
+  border: 1.5px solid rgba(0, 0, 0, 0.75);
+}
+
+.order-card.glass:hover {
+  border-color: rgba(0, 0, 0, 0.9);
+}
+
+.order-card-normal {
+  border-color: rgba(0, 0, 0, 0.75);
+}

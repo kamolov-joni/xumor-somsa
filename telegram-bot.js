@@ -173,7 +173,9 @@ export function initTelegramBot({ db, app }) {
       if (!/^\d{1,2}:\d{2}$/.test(text.trim())) {
         return bot.sendMessage(chatId, '❌ Vaqt formati xato! (soat:minut, masalan: 18:00)');
       }
-      state.deliveryTime = text.trim();
+      // "4:00" → "04:00" (ISO 8601 uchun)
+      const t = text.trim();
+      state.deliveryTime = t.length === 4 ? '0' + t : t;
       state.step = 'date';
       bot.sendMessage(chatId, '📅 Qaysi kuni? (avval kun, keyin oy. Masalan: 31 12 yoki 5 3):');
     } else if (state.step === 'date') {

@@ -23,7 +23,9 @@ export const sendBrowserNotification = (title, body, tag) => {
 };
 
 export const getTimeRemaining = (deliveryDate, deliveryTime) => {
-  const deliveryDateTime = new Date(`${deliveryDate}T${deliveryTime}:00`);
+  // "4:00" → "04:00" bo'lmasa ISO 8601 yaroqsiz → Invalid Date → NaN
+  const paddedTime = deliveryTime ? deliveryTime.padStart(5, '0') : '00:00';
+  const deliveryDateTime = new Date(`${deliveryDate}T${paddedTime}:00`);
   const now = new Date();
   const diff = deliveryDateTime.getTime() - now.getTime();
   return diff; // milliseconds
