@@ -12,6 +12,20 @@ dotenv.config();
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+// Bir vaqtda ikki instance ishga tushmasligi uchun lock fayli
+const LOCK_FILE = path.join(__dirname, '.server.lock');
+if (fs.existsSync(LOCK_FILE)) {
+  const oldPid = fs.readFileSync(LOCK_FILE, 'utf8').trim();
+  try { process.kill(Number(oldPid), 0); // eski jarayon tirikmi?
+    console.error(`❌ Bot allaqachon ishlayapti (PID: ${oldPid}). Avval to'xtating: pkill -f "node server.js"`);
+    process.exit(1);
+  } catch { /* eski jarayon o'lgan — lock'ni yangilaymiz */ }
+}
+fs.writeFileSync(LOCK_FILE, String(process.pid));
+process.on('exit', () => { try { fs.unlinkSync(LOCK_FILE); } catch {} });
+process.on('SIGINT', () => process.exit());
+process.on('SIGTERM', () => process.exit());
+
 const app = express();
 const PORT = process.env.PORT || 5001;
 
