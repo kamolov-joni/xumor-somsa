@@ -1,11 +1,11 @@
 import express from 'express';
-import sqlite3 from 'sqlite3';
 import cors from 'cors';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import dotenv from 'dotenv';
 import { initTelegramBot } from './telegram-bot.js';
+import { createDatabase } from './db.js';
 
 dotenv.config();
 
@@ -33,20 +33,22 @@ app.use(cors());
 app.use(express.json());
 
 // Database Setup
-// DB_PATH bilan Render persistent disk'ga (masalan /data/orders.db) yo'naltirish mumkin.
+// TURSO_DATABASE_URL bo'lsa -> bepul bulutli baza (ma'lumotlar saqlanadi).
+// Bo'lmasa -> lokal sqlite3 fayl.
 const DB_FILE = process.env.DB_PATH || path.join(__dirname, 'orders.db');
 const BACKUP_DIR = process.env.BACKUP_DIR || path.join(__dirname, 'backups');
+const USING_TURSO = Boolean(process.env.TURSO_DATABASE_URL);
 
-// Ensure backup dir exists
-if (!fs.existsSync(BACKUP_DIR)) {
+// Lokal backup papkasi (faqat sqlite3 fayl rejimida kerak)
+if (!USING_TURSO && !fs.existsSync(BACKUP_DIR)) {
   fs.mkdirSync(BACKUP_DIR);
 }
 
-const db = new sqlite3.Database(DB_FILE, (err) => {
+const db = createDatabase({ filePath: DB_FILE }, (err) => {
   if (err) {
     console.error('Database connection failed:', err.message);
   } else {
-    console.log('Connected to SQLite database:', DB_FILE);
+    console.log('Connected to database:', USING_TURSO ? 'Turso (bulutli)' : DB_FILE);
     createTables();
     // Telegram botni shu jarayonda, shu DB ulanishi bilan ishga tushiramiz
     initTelegramBot({ db, app });
@@ -106,9 +108,14 @@ function createTables() {
 
 // Helper: Perform DB Backup
 function performBackup() {
+  // Turso o'zi avtomatik backup/replikatsiya qiladi — lokal VACUUM kerak emas
+  if (USING_TURSO) {
+    console.log('Turso rejimida: backup avtomatik (lokal backup o\'tkazib yuborildi)');
+    return;
+  }
   const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
   const backupFile = path.join(BACKUP_DIR, `backup_${timestamp}.db`);
-  
+
   db.serialize(() => {
     db.run(`VACUUM INTO ?`, [backupFile], (err) => {
       if (err) {

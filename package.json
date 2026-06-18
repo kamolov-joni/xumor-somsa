@@ -12,6 +12,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@libsql/client": "^0.17.4",
     "concurrently": "^10.0.0",
     "cors": "^2.8.6",
     "dotenv": "^16.6.1",

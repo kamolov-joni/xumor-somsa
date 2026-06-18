@@ -2,18 +2,15 @@ services:
   - type: web
     name: somsa-order-backend
     runtime: node
-    plan: starter # 'free' ham bo'ladi, lekin uyqu + disksiz (pastdagi izohga qarang)
+    plan: free
     buildCommand: npm install
     startCommand: npm start
     envVars:
       - key: TELEGRAM_BOT_TOKEN
         sync: false # Render dashboard'da qo'lda kiritiladi
-      - key: DB_PATH
-        value: /data/orders.db
-      - key: BACKUP_DIR
-        value: /data/backups
+      - key: TURSO_DATABASE_URL
+        sync: false # Turso bazasi manzili (libsql://...)
+      - key: TURSO_AUTH_TOKEN
+        sync: false # Turso auth token
       # RENDER_EXTERNAL_URL ni Render avtomatik beradi — bot webhookni shundan oladi.
-    disk:
-      name: somsa-data
-      mountPath: /data
-      sizeGB: 1
+      # Webhook tufayli server uxlab qolsa ham, xabar kelganda uyg'onadi va buyurtma yo'qolmaydi.
