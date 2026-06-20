@@ -452,6 +452,21 @@ app.get('/api/report/payment', (req, res) => {
   });
 });
 
+// Tez javob beradigan health endpoint (keep-alive ping uchun, bazaga tegmaydi)
+app.get('/api/health', (req, res) => res.json({ ok: true, time: Date.now() }));
+
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
 });
+
+// Render bepul tarifda 15 daqiqada uxlab qoladi -> uyg'onishi sekin (502) -> bot "qotadi".
+// Buni oldini olish uchun server o'zini-o'zi har 10 daqiqada ping qiladi va doim uyg'oq turadi.
+const SELF_URL = process.env.RENDER_EXTERNAL_URL;
+if (SELF_URL) {
+  setInterval(() => {
+    fetch(`${SELF_URL}/api/health`)
+      .then(() => console.log('keep-alive ping OK'))
+      .catch((e) => console.log('keep-alive ping xato:', e.message));
+  }, 10 * 60 * 1000); // har 10 daqiqada
+  console.log('✅ Keep-alive yoqildi (server uxlamaydi)');
+}
