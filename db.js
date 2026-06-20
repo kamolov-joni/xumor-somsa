@@ -3,7 +3,7 @@
 //   - bo'lmasa -> lokal sqlite3 fayl (development)
 //
 // Ikkalasi ham bir xil sqlite3-uslubdagi API beradi: db.run / db.get / db.all / db.serialize
-import sqlite3 from 'sqlite3';
+import { createRequire } from 'module';
 
 export function createDatabase({ filePath }, onReady) {
   const TURSO_URL = process.env.TURSO_DATABASE_URL;
@@ -12,7 +12,10 @@ export function createDatabase({ filePath }, onReady) {
   if (TURSO_URL) {
     return createTursoAdapter(TURSO_URL, TURSO_TOKEN, onReady);
   }
-  // Lokal sqlite3
+  // Lokal sqlite3 — faqat shu yerda yuklanadi (Render'da hech qachon yuklanmaydi,
+  // chunki u yerda Turso ishlatiladi va sqlite3 native modul GLIBC bilan mos kelmaydi)
+  const require = createRequire(import.meta.url);
+  const sqlite3 = require('sqlite3');
   return new sqlite3.Database(filePath, onReady);
 }
 
