@@ -154,7 +154,7 @@ setInterval(performBackup, 24 * 60 * 60 * 1000);
 
 // Get active orders
 app.get('/api/orders', (req, res) => {
-  db.all('SELECT * FROM orders ORDER BY datetime(deliveryDate || "T" || deliveryTime)', [], (err, rows) => {
+  db.all("SELECT * FROM orders ORDER BY datetime(deliveryDate || 'T' || deliveryTime)", [], (err, rows) => {
     if (err) {
       return res.status(500).json({ error: err.message });
     }
