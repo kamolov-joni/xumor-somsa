@@ -46,13 +46,16 @@ if (!USING_TURSO && !fs.existsSync(BACKUP_DIR)) {
 
 const db = createDatabase({ filePath: DB_FILE }, (err) => {
   if (err) {
-    console.error('Database connection failed:', err.message);
+    // DB ulanmasa ham (masalan Turso TURSO_AUTH_TOKEN eskirib 401 bersa) botni baribir
+    // ishga tushiramiz — shunda bot "qotib qolmaydi": /start menyu ishlaydi va buyurtma
+    // qo'shishda aniq xato ko'rsatadi (jim qolish o'rniga).
+    console.error('❌ Database ulanmadi:', err.message, '— TURSO_AUTH_TOKEN/TURSO_DATABASE_URL ni tekshiring');
   } else {
     console.log('Connected to database:', USING_TURSO ? 'Turso (bulutli)' : DB_FILE);
     createTables();
-    // Telegram botni shu jarayonda, shu DB ulanishi bilan ishga tushiramiz
-    initTelegramBot({ db, app });
   }
+  // Telegram botni DB holatidan qat'i nazar ishga tushiramiz
+  initTelegramBot({ db, app });
 });
 
 function createTables() {
