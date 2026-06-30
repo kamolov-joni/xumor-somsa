@@ -75,3 +75,61 @@ Endi Netlifedagi sayt Render'dagi backendga ulanadi va bot qo'shgan buyurtmalar 
 
 > Eslatma: SQLite kichik loyiha uchun yetarli. Agar kelajakda kattaroq kerak bo'lsa,
 > bepul hostlangan Postgres (Neon/Supabase) yoki Turso'ga o'tish mumkin.
+
+---
+
+## 🤖 Bot QOTMASLIGI uchun (eng muhim)
+
+Bot "qotishi" (javob bermay qolishi)ning 4 sababi bor. Kod tomonidan 1–3 hal qilindi;
+4-chisi siz dashboardda bajaradigan ish.
+
+**1. Baza tokeni eskirib qolishi (eng ko'p uchraydigan sabab) — `TURSO_AUTH_TOKEN` 401.**
+Bu sodir bo'lsa bot avval umuman jim qolardi. Endi:
+- Bot baza ulanmasa ham ishga tushadi va menyu ishlaydi.
+- Buyurtma/hisobotda baza javob bermasa, foydalanuvchiga aniq xato chiqadi (jim qolmaydi).
+
+**Lekin asl yechim — tokenni MUDDATSIZ qilish**, shunda u hech qachon eskirmaydi:
+```bash
+turso db tokens create <db-nomi> --expiration none
+```
+So'ng Render → **Environment** → `TURSO_AUTH_TOKEN` ni yangilang → **Manual Deploy**.
+
+**2. Baza sekin javob bersa — endi 8 soniyalik timeout bor.** Bot kutib qotmaydi,
+"⏳ Baza sekin javob beryapti" deb javob beradi.
+
+**3. Suhbat o'rtasida server qayta ishga tushsa** (Render free reboot) — eski kodda bot
+keyingi xabarni JIM YUTAR edi. Endi menyu ko'rsatadi: "Buyurtma berish uchun tugmani bosing".
+
+**4. Render free 15 daqiqada uxlab qoladi.** Server o'zini har 4 daqiqada ping qiladi
+(kodda) — odatda shuning o'zi yetarli. **Kafolatli bo'lishi uchun** tashqi pingni ham qo'shing:
+- https://cron-job.org (bepul) yoki https://uptimerobot.com
+- URL: `https://somsa-order-backend.onrender.com/api/health`
+- Interval: **5 daqiqa**
+
+> ⚠️ 750 soat/oy bepul limit — bitta doimiy yoniq servis ~730 soat ishlatadi, limitга sig'adi.
+
+### Tezkor tashxis (bot javob bermayotganda)
+```bash
+# Webhook to'g'ri o'rnatilganmi? (url bo'sh yoki last_error 404 bo'lsa — muammo bot init'da)
+curl "https://api.telegram.org/bot<TOKEN>/getWebhookInfo"
+
+# Baza ishlayaptimi? (401 -> TURSO_AUTH_TOKEN eskirgan)
+curl "https://somsa-order-backend.onrender.com/api/orders"
+
+# Server uyg'oqmi?
+curl "https://somsa-order-backend.onrender.com/api/health"
+```
+
+> ⚠️ Render jonli turganda lokalda `node server.js` ni ISHGA TUSHIRMANG — lokal polling
+> `deleteWebhook` chaqirib, Render webhookini o'chiradi (Render restart bo'lguncha bot o'lik qoladi).
+
+---
+
+## 🌐 Buyurtmalar saytda ko'rinishi (telegram → sayt)
+
+Bot qo'shgan buyurtma avtomatik saytda ko'rinadi, chunki:
+- Bot va sayt **bitta Turso bazasini** ishlatadi (bot yozadi → API o'qiydi).
+- Sayt har **5 soniyada** `/api/orders` ni so'raydi (sahifani yangilash shart emas).
+
+Buning ishlashi uchun Netlify'da **`VITE_API_URL`** to'g'ri bo'lishi SHART:
+`https://somsa-order-backend.onrender.com/api` (oxirida `/api`). O'zgartirgach Netlify'da **Redeploy** qiling.

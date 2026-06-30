@@ -9,8 +9,54 @@ export function initTelegramBot({ db, app }) {
 
   const bot = new Bot(TELEGRAM_TOKEN);
 
-  // Suhbat davomidagi vaqtinchalik holat
+  // Suhbat davomidagi vaqtinchalik holat (xotirada). Server qayta ishga tushsa
+  // yo'qoladi — shuning uchun pastda "holat yo'q" holati JIM qolmaydi, menyu beradi.
   const userStates = {};
+
+  // ─── DB yordamchilari: Promise + TIMEOUT ─────────────────────────────────
+  // Eng muhim "qotish" sababi — Turso/baza sekin javob bersa yoki ulanmasa,
+  // callback umuman chaqirilmaydi va bot jim qoladi. Timeout shuni oldini oladi:
+  // baza 8 soniyada javob bermasa — foydalanuvchiga aniq xato ko'rsatamiz.
+  const DB_TIMEOUT_MS = 8000;
+
+  function withTimeout(promise, ms = DB_TIMEOUT_MS) {
+    let timer;
+    const timeout = new Promise((_, reject) => {
+      timer = setTimeout(() => reject(new Error('DB_TIMEOUT')), ms);
+    });
+    return Promise.race([promise, timeout]).finally(() => clearTimeout(timer));
+  }
+
+  const dbRun = (sql, params = []) =>
+    withTimeout(new Promise((resolve, reject) => {
+      db.run(sql, params, function (err) {
+        if (err) reject(err);
+        else resolve({ changes: this?.changes ?? 0, lastID: this?.lastID });
+      });
+    }));
+
+  const dbGet = (sql, params = []) =>
+    withTimeout(new Promise((resolve, reject) => {
+      db.get(sql, params, (err, row) => (err ? reject(err) : resolve(row)));
+    }));
+
+  const dbAll = (sql, params = []) =>
+    withTimeout(new Promise((resolve, reject) => {
+      db.all(sql, params, (err, rows) => (err ? reject(err) : resolve(rows || [])));
+    }));
+
+  // Baza xatosini foydalanuvchiga tushunarli matnga aylantiramiz
+  function dbErrorText(e) {
+    const msg = e?.message || '';
+    if (msg === 'DB_TIMEOUT')
+      return '⏳ Baza hozir sekin javob beryapti. Birozdan keyin qayta urinib ko\'ring.';
+    if (/401|unauth|expired|token/i.test(msg))
+      return '🔌 Baza ulanishini yangilash kerak (TURSO_AUTH_TOKEN eskirgan). Admin bilan bog\'laning.';
+    return '❌ Baza xatosi. Birozdan keyin qayta urinib ko\'ring.';
+  }
+
+  // Har qanday holatda javob beramiz — hech qachon jim qolmaymiz
+  const safeReply = (ctx, text, extra) => ctx.reply(text, extra).catch(() => {});
 
   function generateOrderId() {
     return 'ORD-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9);
@@ -68,45 +114,51 @@ export function initTelegramBot({ db, app }) {
 
   // /start
   bot.command('start', (ctx) =>
-    ctx.reply('👋 Xush kelibsiz! Nima qilmoqchisiz?', { reply_markup: mainMenu() })
+    safeReply(ctx, '👋 Xush kelibsiz! Nima qilmoqchisiz?', { reply_markup: mainMenu() })
   );
 
   // /help
   bot.command('help', (ctx) =>
-    ctx.reply(`📖 BUYURTMA BOTI YORDAM\n\n/start - Bosh menyu\n/help - Yordam\n/pay [ID] - To'lovni belgilash\n\n✅ Yangi buyurtma qo'shish\n✅ To'lov holatini ko'rish\n✅ Hisobotlarni ko'rish`)
+    safeReply(ctx, `📖 BUYURTMA BOTI YORDAM\n\n/start - Bosh menyu\n/help - Yordam\n/pay [ID] - To'lovni belgilash\n\n✅ Yangi buyurtma qo'shish\n✅ To'lov holatini ko'rish\n✅ Hisobotlarni ko'rish`)
   );
 
   // /pay <orderId>
-  bot.command('pay', (ctx) => {
-    const orderId = ctx.match?.trim();
-    if (!orderId) return ctx.reply('❌ Buyurtma ID kiriting: /pay ORD-...');
-    const now = new Date().toISOString();
-    db.run('UPDATE orders SET paymentStatus=?, updatedAt=? WHERE id=? AND source=?',
-      ['paid', now, orderId, 'telegram'],
-      function (err) {
-        if (err) return ctx.reply('❌ Xato: ' + err.message);
-        if (this.changes === 0) return ctx.reply('❌ Buyurtma topilmadi!');
-        ctx.reply(`✅ To'lov belgilandi!\n🆔 ${orderId}`, { reply_markup: backMenu() });
-      }
-    );
+  bot.command('pay', async (ctx) => {
+    try {
+      const orderId = ctx.match?.trim();
+      if (!orderId) return safeReply(ctx, '❌ Buyurtma ID kiriting: /pay ORD-...');
+      const now = new Date().toISOString();
+      const { changes } = await dbRun(
+        'UPDATE orders SET paymentStatus=?, updatedAt=? WHERE id=? AND source=?',
+        ['paid', now, orderId, 'telegram']
+      );
+      if (changes === 0) return safeReply(ctx, '❌ Buyurtma topilmadi!');
+      await safeReply(ctx, `✅ To'lov belgilandi!\n🆔 ${orderId}`, { reply_markup: backMenu() });
+    } catch (e) {
+      await safeReply(ctx, dbErrorText(e), { reply_markup: backMenu() });
+    }
   });
 
-  // Callback tugmalar
+  // Callback tugmalar — har biri try/catch ichida, hech qachon jim qolmaydi
   bot.on('callback_query:data', async (ctx) => {
-    const action = ctx.callbackQuery.data;
-    const chatId = ctx.chat.id;
-
     await ctx.answerCallbackQuery().catch(() => {});
+    const action = ctx.callbackQuery.data;
+    const chatId = ctx.chat?.id;
 
-    if (action === 'add_order') {
-      userStates[chatId] = { step: 'fullName' };
-      await ctx.reply('📝 Ism va familiyangizni kiriting:');
-    } else if (action === 'report') {
-      showReport(ctx, chatId);
-    } else if (action === 'payment_status') {
-      showPaymentStatus(ctx, chatId);
-    } else if (action === 'main' || action === 'back') {
-      await ctx.reply('👋 Bosh menu:', { reply_markup: mainMenu() });
+    try {
+      if (action === 'add_order') {
+        userStates[chatId] = { step: 'fullName' };
+        await safeReply(ctx, '📝 Ism va familiyangizni kiriting:');
+      } else if (action === 'report') {
+        await showReport(ctx);
+      } else if (action === 'payment_status') {
+        await showPaymentStatus(ctx);
+      } else if (action === 'main' || action === 'back') {
+        delete userStates[chatId];
+        await safeReply(ctx, '👋 Bosh menyu:', { reply_markup: mainMenu() });
+      }
+    } catch (e) {
+      await safeReply(ctx, dbErrorText(e), { reply_markup: backMenu() });
     }
   });
 
@@ -117,38 +169,54 @@ export function initTelegramBot({ db, app }) {
     if (text.startsWith('/')) return;
 
     const state = userStates[chatId];
-    if (!state) return;
 
-    if (state.step === 'fullName') {
-      state.fullName = text.trim();
-      state.step = 'quantity';
-      await ctx.reply('🥟 Nechta somsa kerak?');
-    } else if (state.step === 'quantity') {
-      if (isNaN(text.trim())) return ctx.reply('❌ Iltimos, raqam kiriting!');
-      state.quantity = parseInt(text.trim());
-      state.step = 'location';
-      await ctx.reply('📍 Lokatsiyani kiriting (masalan: Mirobod, Shaykhantaur):');
-    } else if (state.step === 'location') {
-      state.location = text.trim();
-      state.step = 'deliveryTime';
-      await ctx.reply('⏰ Qaysi soatda kerak? (masalan: 18:00):');
-    } else if (state.step === 'deliveryTime') {
-      if (!/^\d{1,2}:\d{2}$/.test(text.trim()))
-        return ctx.reply('❌ Vaqt formati xato! (soat:minut, masalan: 18:00)');
-      state.deliveryTime = padTime(text.trim());
-      state.step = 'date';
-      await ctx.reply('📅 Qaysi kuni? (avval kun, keyin oy. Masalan: 31 12 yoki 5 3):');
-    } else if (state.step === 'date') {
-      const parsedDate = parseFlexibleDate(text.trim());
-      if (!parsedDate)
-        return ctx.reply('❌ Sana noto\'g\'ri.\nAvval kun, keyin oy:\n• 31 12\n• 5 3\n• 31.12\n• 31/12');
-      state.deliveryDate = parsedDate;
-      delete userStates[chatId];
-      saveOrder(ctx, chatId, state);
+    // Holat yo'q (masalan server qayta ishga tushgan) — JIM QOLMAYMIZ.
+    // Aks holda bot "qotgan"dek ko'rinadi. Menyuni ko'rsatamiz.
+    if (!state) {
+      return safeReply(ctx, '👋 Buyurtma berish uchun quyidagi tugmani bosing:', {
+        reply_markup: mainMenu(),
+      });
+    }
+
+    try {
+      if (state.step === 'fullName') {
+        if (!text.trim()) return safeReply(ctx, '❌ Iltimos, ismingizni kiriting:');
+        state.fullName = text.trim();
+        state.step = 'quantity';
+        await safeReply(ctx, '🥟 Nechta somsa kerak?');
+      } else if (state.step === 'quantity') {
+        const qty = parseInt(text.trim(), 10);
+        if (!Number.isInteger(qty) || qty <= 0)
+          return safeReply(ctx, '❌ Iltimos, musbat raqam kiriting (masalan: 5):');
+        state.quantity = qty;
+        state.step = 'location';
+        await safeReply(ctx, '📍 Lokatsiyani kiriting (masalan: Mirobod, Shaykhantaur):');
+      } else if (state.step === 'location') {
+        if (!text.trim()) return safeReply(ctx, '❌ Iltimos, lokatsiyani kiriting:');
+        state.location = text.trim();
+        state.step = 'deliveryTime';
+        await safeReply(ctx, '⏰ Qaysi soatda kerak? (masalan: 18:00):');
+      } else if (state.step === 'deliveryTime') {
+        if (!/^\d{1,2}:\d{2}$/.test(text.trim()))
+          return safeReply(ctx, '❌ Vaqt formati xato! (soat:minut, masalan: 18:00)');
+        state.deliveryTime = padTime(text.trim());
+        state.step = 'date';
+        await safeReply(ctx, '📅 Qaysi kuni? (avval kun, keyin oy. Masalan: 31 12 yoki 5 3):');
+      } else if (state.step === 'date') {
+        const parsedDate = parseFlexibleDate(text.trim());
+        if (!parsedDate)
+          return safeReply(ctx, '❌ Sana noto\'g\'ri.\nAvval kun, keyin oy:\n• 31 12\n• 5 3\n• 31.12\n• 31/12');
+        state.deliveryDate = parsedDate;
+        delete userStates[chatId];          // saqlashdan OLDIN tozalaymiz (qayta yozilmasin)
+        await saveOrder(ctx, chatId, state);
+      }
+    } catch (e) {
+      delete userStates[chatId];            // xato bo'lsa suhbatni tozalaymiz
+      await safeReply(ctx, dbErrorText(e) + '\n\nQaytadan boshlang:', { reply_markup: mainMenu() });
     }
   });
 
-  function saveOrder(ctx, chatId, state) {
+  async function saveOrder(ctx, chatId, state) {
     const orderId = generateOrderId();
     const now = new Date().toISOString();
     const products = JSON.stringify([{ name: 'Somsa', quantity: state.quantity }]);
@@ -173,58 +241,52 @@ export function initTelegramBot({ db, app }) {
       'telegram',
     ];
 
-    db.run(sql, vals, function (err) {
-      if (err) return ctx.reply('❌ Xato: ' + err.message);
-      ctx.reply(
-        `✅ Buyurtma qo'shildi!\n\n👤 ${state.fullName}\n🥟 ${state.quantity} ta somsa\n📍 ${state.location}\n⏰ ${state.deliveryTime}\n📅 ${state.deliveryDate}\n💳 To'lanmagan\n\n🆔 ${orderId}`,
-        { reply_markup: backMenu() }
-      );
-    });
+    await dbRun(sql, vals);
+    await safeReply(
+      ctx,
+      `✅ Buyurtma qo'shildi!\n\n👤 ${state.fullName}\n🥟 ${state.quantity} ta somsa\n📍 ${state.location}\n⏰ ${state.deliveryTime}\n📅 ${state.deliveryDate}\n💳 To'lanmagan\n\n🆔 ${orderId}\n\n🌐 Buyurtma saytda ko'rinadi.`,
+      { reply_markup: backMenu() }
+    );
   }
 
-  function showReport(ctx, chatId) {
-    db.get(`SELECT COUNT(*) as total,
+  async function showReport(ctx) {
+    const s = await dbGet(`SELECT COUNT(*) as total,
       SUM(CASE WHEN paymentStatus='unpaid' THEN 1 ELSE 0 END) as unpaid,
       SUM(CASE WHEN paymentStatus='paid' THEN 1 ELSE 0 END) as paid,
       SUM(json_extract(products,'$[0].quantity')) as totalItems
-      FROM orders WHERE source='telegram'`, [], (err, s) => {
-      if (err) return ctx.reply('❌ Xato: ' + err.message);
-      ctx.reply(
-        `📊 HISOBOT\n\n📦 Jami: ${s.total || 0}\n✅ To'langan: ${s.paid || 0}\n❌ To'lanmagan: ${s.unpaid || 0}\n🥟 Jami somsa: ${s.totalItems || 0}`,
-        { reply_markup: backMenu() }
-      );
-    });
+      FROM orders WHERE source='telegram'`);
+    await safeReply(
+      ctx,
+      `📊 HISOBOT\n\n📦 Jami: ${s?.total || 0}\n✅ To'langan: ${s?.paid || 0}\n❌ To'lanmagan: ${s?.unpaid || 0}\n🥟 Jami somsa: ${s?.totalItems || 0}`,
+      { reply_markup: backMenu() }
+    );
   }
 
-  function showPaymentStatus(ctx, chatId) {
-    db.all(`SELECT id, customerName,
+  async function showPaymentStatus(ctx) {
+    const rows = await dbAll(`SELECT id, customerName,
       json_extract(products,'$[0].quantity') as quantity,
       address as location, deliveryTime, paymentStatus
-      FROM orders WHERE source='telegram' ORDER BY createdAt DESC LIMIT 20`, [], (err, rows) => {
-      if (err) return ctx.reply('❌ Xato: ' + err.message);
-      if (!rows?.length) return ctx.reply('📭 Hali buyurtma yo\'q', { reply_markup: backMenu() });
+      FROM orders WHERE source='telegram' ORDER BY createdAt DESC LIMIT 20`);
+    if (!rows.length)
+      return safeReply(ctx, '📭 Hali buyurtma yo\'q', { reply_markup: backMenu() });
 
-      let text = '💳 TO\'LOV HOLATI\n\n';
-      let unpaid = 0;
-      rows.forEach((o, i) => {
-        const paid = o.paymentStatus === 'paid';
-        if (!paid) unpaid++;
-        text += `${i + 1}. ${o.customerName}\n   📍 ${o.location} | ⏰ ${o.deliveryTime}\n   🥟 ${o.quantity} ta | ${paid ? '✅ To\'langan' : '❌ To\'lanmagan'}\n   🆔 ${o.id}\n\n`;
-      });
-      text += `\n❌ To'lanmagan: ${unpaid}`;
-      ctx.reply(text, { reply_markup: backMenu() });
+    let text = '💳 TO\'LOV HOLATI\n\n';
+    let unpaid = 0;
+    rows.forEach((o, i) => {
+      const paid = o.paymentStatus === 'paid';
+      if (!paid) unpaid++;
+      text += `${i + 1}. ${o.customerName}\n   📍 ${o.location} | ⏰ ${o.deliveryTime}\n   🥟 ${o.quantity} ta | ${paid ? '✅ To\'langan' : '❌ To\'lanmagan'}\n   🆔 ${o.id}\n\n`;
     });
+    text += `\n❌ To'lanmagan: ${unpaid}`;
+    await safeReply(ctx, text, { reply_markup: backMenu() });
   }
 
-  // Xato handler
+  // Global xato handler — hech qanday xato botni to'xtatmasin
   bot.catch((err) => {
-    if (err instanceof GrammyError) {
-      console.error('Telegram xatosi:', err.message);
-    } else if (err instanceof HttpError) {
-      console.error('Network xatosi:', err.message);
-    } else {
-      console.error('Kutilmagan xato:', err.message);
-    }
+    const e = err.error;
+    if (e instanceof GrammyError) console.error('Telegram xatosi:', e.description);
+    else if (e instanceof HttpError) console.error('Network xatosi:', e.message);
+    else console.error('Kutilmagan xato:', e?.message || e);
   });
 
   // Webhook (Render) yoki Polling (lokal) rejimi
@@ -233,25 +295,47 @@ export function initTelegramBot({ db, app }) {
   if (WEBHOOK_BASE && app) {
     const secretPath = `/telegram/webhook/${TELEGRAM_TOKEN}`;
     const fullUrl = `${WEBHOOK_BASE.replace(/\/$/, '')}${secretPath}`;
-    // webhookCallback botni avtomatik init qiladi (bot.init) va xatolarni boshqaradi.
-    // Eski kod bot.handleUpdate'ni init qilmasdan chaqirardi -> "Bot not initialized!"
-    // xatosi jimgina yo'qolardi va bot /start'da qotib qolardi.
-    app.post(secretPath, webhookCallback(bot, 'express'));
-    bot.api.setWebhook(fullUrl)
-      .then(() => console.log('✅ Bot WEBHOOK rejimida:', fullUrl))
-      .catch((e) => console.error('❌ Webhook xatosi:', e.message));
+
+    // webhookCallback botni avtomatik init qiladi.
+    // timeoutMilliseconds + onTimeout:'return' — agar bir update sekin ishlasa,
+    // Telegramga tez 200 qaytaramiz. Shunda Telegram qayta-qayta yubormaydi
+    // (takror buyurtma bo'lmaydi) va webhook "qotmaydi".
+    app.post(secretPath, webhookCallback(bot, 'express', {
+      timeoutMilliseconds: 9000,
+      onTimeout: 'return',
+    }));
+
+    setWebhookWithRetry(fullUrl);
   } else {
-    // Eski webhook'ni tozalab, polling'ni boshlash
+    // Lokal: eski webhook'ni tozalab, polling'ni boshlash
     bot.api.deleteWebhook({ drop_pending_updates: true })
-      .then(() => {
-        bot.start({
-          onStart: () => {
-            console.log('✅ Bot POLLING rejimida ishga tushdi (lokal)');
-            console.log('🤖 Bot: @xumor_somsa_order_bot');
-          }
-        });
-      })
+      .then(() => bot.start({
+        onStart: () => {
+          console.log('✅ Bot POLLING rejimida ishga tushdi (lokal)');
+          console.log('🤖 Bot: @xumor_somsa_order_bot');
+        }
+      }))
       .catch((e) => console.error('❌ Start xatosi:', e.message));
+  }
+
+  // Webhook o'rnatishni qayta urinish bilan — bitta tarmoq uzilishi botni
+  // "o'lik" qoldirmasin (avval bir marta urinilardi, fail bo'lsa bot jim edi).
+  async function setWebhookWithRetry(url, attempt = 1) {
+    try {
+      await bot.api.setWebhook(url, {
+        drop_pending_updates: false,                 // uxlab turganda kelgan buyurtmalar yo'qolmasin
+        allowed_updates: ['message', 'callback_query'],
+      });
+      console.log('✅ Bot WEBHOOK rejimida:', url);
+    } catch (e) {
+      console.error(`❌ Webhook xatosi (urinish ${attempt}):`, e.message);
+      if (attempt < 6) {
+        const delay = Math.min(30000, 5000 * attempt);
+        setTimeout(() => setWebhookWithRetry(url, attempt + 1), delay);
+      } else {
+        console.error('❌ Webhook 6 marta o\'rnatilmadi — keyingi deploy/restartda qayta urinadi.');
+      }
+    }
   }
 
   return bot;

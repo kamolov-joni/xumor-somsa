@@ -463,13 +463,14 @@ app.listen(PORT, () => {
 });
 
 // Render bepul tarifda 15 daqiqada uxlab qoladi -> uyg'onishi sekin (502) -> bot "qotadi".
-// Buni oldini olish uchun server o'zini-o'zi har 10 daqiqada ping qiladi va doim uyg'oq turadi.
+// Buni oldini olish uchun server o'zini-o'zi har 4 daqiqada ping qiladi va doim uyg'oq turadi.
+// (4 daqiqa -> 15 daqiqalik chegaragacha 3 marta ping; bitta-ikkita ping yo'qolsa ham uxlamaydi.)
 const SELF_URL = process.env.RENDER_EXTERNAL_URL;
 if (SELF_URL) {
-  setInterval(() => {
+  const keepAlive = () =>
     fetch(`${SELF_URL}/api/health`)
-      .then(() => console.log('keep-alive ping OK'))
+      .then(() => console.log('keep-alive ping OK', new Date().toISOString()))
       .catch((e) => console.log('keep-alive ping xato:', e.message));
-  }, 10 * 60 * 1000); // har 10 daqiqada
-  console.log('✅ Keep-alive yoqildi (server uxlamaydi)');
+  setInterval(keepAlive, 4 * 60 * 1000); // har 4 daqiqada
+  console.log('✅ Keep-alive yoqildi (server uxlamaydi — har 4 daqiqada ping)');
 }
