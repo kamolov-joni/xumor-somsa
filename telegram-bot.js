@@ -1,4 +1,4 @@
-import { Bot, GrammyError, HttpError } from 'grammy';
+import { Bot, GrammyError, HttpError, webhookCallback } from 'grammy';
 
 export function initTelegramBot({ db, app }) {
   const TELEGRAM_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
@@ -233,10 +233,10 @@ export function initTelegramBot({ db, app }) {
   if (WEBHOOK_BASE && app) {
     const secretPath = `/telegram/webhook/${TELEGRAM_TOKEN}`;
     const fullUrl = `${WEBHOOK_BASE.replace(/\/$/, '')}${secretPath}`;
-    app.post(secretPath, (req, res) => {
-      bot.handleUpdate(req.body);
-      res.sendStatus(200);
-    });
+    // webhookCallback botni avtomatik init qiladi (bot.init) va xatolarni boshqaradi.
+    // Eski kod bot.handleUpdate'ni init qilmasdan chaqirardi -> "Bot not initialized!"
+    // xatosi jimgina yo'qolardi va bot /start'da qotib qolardi.
+    app.post(secretPath, webhookCallback(bot, 'express'));
     bot.api.setWebhook(fullUrl)
       .then(() => console.log('✅ Bot WEBHOOK rejimida:', fullUrl))
       .catch((e) => console.error('❌ Webhook xatosi:', e.message));
